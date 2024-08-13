@@ -1,13 +1,17 @@
 import { useRef, useEffect, useState } from "react";
 import { db } from "../appwrite/databases.js";
-import PropTypes from "prop-types";
+// import PropTypes from "prop-types";
 import DeleteButton from "./DeleteButton.jsx";
 import Spinner from "../icons/Spinner.jsx";
 import { setNewOffset, autoGrow, setZIndex, bodyParser } from "../utils.js";
+import { useContext } from "react";
+import { NoteContext } from "../context/NoteContext.jsx";
 
-const NoteCard = ({ note, setNotes }) => {
+const NoteCard = ({ note }) => {
   const [saving, setSaving] = useState(false);
   const keyUpTimer = useRef(null);
+
+  const { setSelectedNote } = useContext(NoteContext);
 
   const body = bodyParser(note.body);
   const [position, setPosition] = useState(JSON.parse(note.position));
@@ -20,16 +24,18 @@ const NoteCard = ({ note, setNotes }) => {
 
   useEffect(() => {
     autoGrow(textAreaRef);
+    setZIndex(cardRef.current);
   }, []);
 
   const mouseDown = (e) => {
-    mouseStartPos.x = e.clientX;
+    if (e.target.className === "card-header") mouseStartPos.x = e.clientX;
     mouseStartPos.y = e.clientY;
 
     document.addEventListener("mousemove", mouseMove);
     document.addEventListener("mouseup", mouseUp);
 
     setZIndex(cardRef.current);
+    setSelectedNote(note);
   };
 
   const mouseMove = (e) => {
@@ -92,7 +98,7 @@ const NoteCard = ({ note, setNotes }) => {
         className="card-header"
         style={{ backgroundColor: colors.colorHeader }}
       >
-        <DeleteButton setNotes={setNotes} noteId={note.$id} />
+        <DeleteButton noteId={note.$id} />
 
         {saving && (
           <div className="card-saving">
@@ -113,6 +119,7 @@ const NoteCard = ({ note, setNotes }) => {
           }}
           onFocus={() => {
             setZIndex(cardRef.current);
+            setSelectedNote(note);
           }}
         ></textarea>
       </div>
@@ -120,10 +127,10 @@ const NoteCard = ({ note, setNotes }) => {
   );
 };
 
-NoteCard.propTypes = {
-  note: PropTypes.shape({
-    body: PropTypes.string.isRequired, // Assuming body is a JSON string
-  }).isRequired,
-};
+// NoteCard.propTypes = {
+//   note: PropTypes.shape({
+//     body: PropTypes.string.isRequired, // Assuming body is a JSON string
+//   }).isRequired,
+// };
 
 export default NoteCard;
